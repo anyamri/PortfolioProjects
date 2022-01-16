@@ -29,6 +29,13 @@ FROM PortfolioProject..['COVIDDeaths$']
 GROUP BY location, population
 ORDER BY PercentPopulationInfected DESC
 
+-- Highest infection rate by date
+SELECT Location, population, date, MAX(total_cases) as HighestInfectionCount, MAX((total_cases/population))*100 as PercentPopulationInfected
+FROM PortfolioProject..['COVIDDeaths$']
+-- WHERE location = 'United States'
+GROUP BY location, population, date
+ORDER BY PercentPopulationInfected DESC
+
 -- Highest death count by country
 SELECT location, MAX(cast(total_deaths as int)) as TotalDeathCount
 FROM PortfolioProject..['COVIDDeaths$']
@@ -58,6 +65,14 @@ JOIN PortfolioProject..COVIDVaccinations$ vac
 	and dea.date = vac.date
 WHERE dea.continent IS NOT NULL
 ORDER BY 2,3
+
+-- Death counts by country
+SELECT location, SUM(cast(new_deaths as int)) as TotalDeathCount
+FROM PortfolioProject..['COVIDDeaths$']
+WHERE continent IS NULL 
+AND location NOT IN ('World', 'European Union', 'International', 'Upper middle income', 'High income', 'Lower middle income', 'Low income')
+GROUP BY location
+ORDER BY TotalDeathCount DESC
 
 -- TEMP Table
 DROP TABLE if exists #PercentPopulationVaccinated
@@ -100,3 +115,27 @@ FROM PortfolioProject..['COVIDDeaths$']
 CREATE VIEW CountryInfectionRate AS
 SELECT Location, date, total_cases, population, (total_cases/population)*100 as InfectionRate
 FROM PortfolioProject..['COVIDDeaths$']
+
+CREATE VIEW WorldCaseCount AS
+SELECT SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(new_cases) * 100 as DeathPercentage
+FROM PortfolioProject..['COVIDDeaths$']
+WHERE continent IS NOT NULL
+
+CREATE VIEW DeathCountyByContinent AS
+SELECT location, SUM(cast(new_deaths as int)) as TotalDeathCount
+FROM PortfolioProject..['COVIDDeaths$']
+WHERE continent IS NULL 
+AND location NOT IN ('World', 'European Union', 'International', 'Upper middle income', 'High income', 'Lower middle income', 'Low income')
+GROUP BY location
+
+CREATE VIEW CountriesWithHighestInfectionRate AS
+SELECT Location, population, MAX(total_cases) as HighestInfectionCount, MAX((total_cases/population))*100 as PercentPopulationInfected
+FROM PortfolioProject..['COVIDDeaths$']
+-- WHERE location = 'United States'
+GROUP BY location, population
+
+CREATE VIEW HighestInfectionRateByDate AS
+SELECT Location, population, date, MAX(total_cases) as HighestInfectionCount, MAX((total_cases/population))*100 as PercentPopulationInfected
+FROM PortfolioProject..['COVIDDeaths$']
+-- WHERE location = 'United States'
+GROUP BY location, population, date
